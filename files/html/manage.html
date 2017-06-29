@@ -1,0 +1,54 @@
+{{ .header }}
+{{ .navigation }}
+<table>
+	<form method="post" id="form_addteam" action="/myreviewer/add">
+		<tr>
+			<td colspan="2">
+				Add Team
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Name
+			</td>
+			<td>
+				<input type="text" name="team_addteam" id="team_addteam" />
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Slack Channel
+			</td>
+			<td>
+				<input type="text" name="slack_channel_addteam" id="team_addteam" /> (ex : #tribe-discovery-tec)
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Slack Webhook
+			</td>
+			<td>
+				<input type="text" name="slack_webhook_addteam" id="team_addteam" />
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2">
+				<button id="submit_addteam">Submit</button>
+			</td>
+		</tr>
+	</form>
+</table>
+=========================================================
+<table>
+	<tr>
+		<td>
+			Choose Team
+		</td>
+		<td>
+			<select>
+				<option></option>
+			</select>
+		</td>
+	</tr>
+</table>
+{{ .footer }}

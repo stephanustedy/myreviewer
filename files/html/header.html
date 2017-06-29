@@ -1,0 +1,5 @@
+<html>
+	<body>
+	{{ range $value := .scripts }}
+		<script src="{{$value}}"></script>
+	{{ end }}
