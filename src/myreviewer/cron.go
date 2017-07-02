@@ -27,7 +27,7 @@ func reNotifyAllPending() {
 			for _, review := range allActiveReview {
 				for _, reviewer := range review.Reviewer {
 					if reviewer.Status == 1 {
-						err := reNotifyReview(review, "vm:7412")
+						err := reNotifyReview(review, "devel-go.tkpd:7412")
 						if err != nil {
 							log.Println(err)
 						}
