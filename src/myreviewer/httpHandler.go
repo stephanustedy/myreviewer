@@ -178,27 +178,28 @@ func ReviewActionHandler(w http.ResponseWriter, req *http.Request, _ httprouter.
 	if err != nil {
 		log.Println(err)
 	}
+	review, err := getReviewById(reviewId)
+        if err != nil {
+                log.Println(err)
+        }
+	if act == "-1" {
+		err := notifyNotApproved(review)
+                if err != nil {
+                        log.Println(err)
+                }
+	}
 
 	count := countPendingReviewer(reviewId)
 	if count == 0 {
 		isApproved := getNotApproveCount(reviewId)
-		review, err := getReviewById(reviewId)
-		if err != nil {
-			log.Println(err)
-		}
 		if isApproved {
 			err := notifyApproved(review)
 			if err != nil {
 				log.Println(err)
 			}
-		} else {
-			err := notifyNotApproved(review)
-			if err != nil {
-				log.Println(err)
-			}
+			// set review to done
+	                updateReview(reviewId, 2)
 		}
-		// set review to done
-		updateReview(reviewId, 2)
 	}
 
 	content := closeTemplateHandler()
