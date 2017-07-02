@@ -1,6 +1,6 @@
 package myreviewer
 
-import(
+import (
 	"log"
 	"net/http"
 
@@ -44,9 +44,9 @@ func AddTeamHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Param
 	}
 
 	team := &Team{
-		Name : name,
+		Name:    name,
 		Webhook: webhook,
-		Channel : channel,
+		Channel: channel,
 	}
 
 	message := "success add team!"
@@ -56,7 +56,7 @@ func AddTeamHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Param
 		log.Println(err)
 		message = "failed add team!"
 	}
-	http.Redirect(w, req, "/myreviewer/manage?message=" + message, http.StatusSeeOther)
+	http.Redirect(w, req, "/myreviewer/manage?message="+message, http.StatusSeeOther)
 }
 
 func DeleteTeamHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
@@ -69,7 +69,7 @@ func DeleteTeamHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Pa
 		log.Println(err)
 		message = "failed delete team!"
 	}
-	http.Redirect(w, req, "/myreviewer/manage?message=" + message, http.StatusSeeOther)
+	http.Redirect(w, req, "/myreviewer/manage?message="+message, http.StatusSeeOther)
 }
 
 func AddMemberHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
@@ -79,10 +79,10 @@ func AddMemberHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Par
 	username := req.PostFormValue("username")
 
 	member := &Member{
-		TeamId : team,
-		Role : role,
-		Name : name,
-		Username : username,
+		TeamId:   team,
+		Role:     role,
+		Name:     name,
+		Username: username,
 	}
 
 	message := "success add member!"
@@ -92,7 +92,7 @@ func AddMemberHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Par
 		log.Println(err)
 		message = "failed add member!"
 	}
-	http.Redirect(w, req, "/myreviewer/manage?message=" + message, http.StatusSeeOther)
+	http.Redirect(w, req, "/myreviewer/manage?message="+message, http.StatusSeeOther)
 }
 
 func DeleteMemberHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
@@ -105,7 +105,7 @@ func DeleteMemberHandler(w http.ResponseWriter, req *http.Request, _ httprouter.
 		log.Println(err)
 		message = "failed delete member!"
 	}
-	http.Redirect(w, req, "/myreviewer/manage?message=" + message, http.StatusSeeOther)
+	http.Redirect(w, req, "/myreviewer/manage?message="+message, http.StatusSeeOther)
 }
 
 func ReviewHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
@@ -115,11 +115,11 @@ func ReviewHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params
 	pr := req.PostFormValue("pr")
 	host := req.Host
 
-	review := &Review {
-		TeamId : team,
-		QA : qa,
-		Developer : se,
-		PullRequest : pr,
+	review := &Review{
+		TeamId:      team,
+		QA:          qa,
+		Developer:   se,
+		PullRequest: pr,
 	}
 	message := "success notify review!"
 	review, err := addReview(review)
@@ -134,7 +134,7 @@ func ReviewHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params
 		message = "failed notify review!"
 	}
 
-	http.Redirect(w, req, "/myreviewer?message=" + message, http.StatusSeeOther)
+	http.Redirect(w, req, "/myreviewer?message="+message, http.StatusSeeOther)
 }
 
 func ReNotifyHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
@@ -152,7 +152,7 @@ func ReNotifyHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Para
 		message = "failed notify review!"
 	}
 
-	http.Redirect(w, req, "/myreviewer?message=" + message, http.StatusSeeOther)
+	http.Redirect(w, req, "/myreviewer?message="+message, http.StatusSeeOther)
 }
 
 func CloseReviewHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
@@ -165,7 +165,7 @@ func CloseReviewHandler(w http.ResponseWriter, req *http.Request, _ httprouter.P
 		log.Println(err)
 		message = "failed close review!"
 	}
-	http.Redirect(w, req, "/myreviewer?message=" + message, http.StatusSeeOther)
+	http.Redirect(w, req, "/myreviewer?message="+message, http.StatusSeeOther)
 }
 
 func ReviewActionHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
@@ -173,20 +173,19 @@ func ReviewActionHandler(w http.ResponseWriter, req *http.Request, _ httprouter.
 	act := req.FormValue("act")
 	reviewerId := req.FormValue("reviewer_id")
 
-
 	err := updateReviewer(reviewId, act, reviewerId)
 	if err != nil {
 		log.Println(err)
 	}
 	review, err := getReviewById(reviewId)
-        if err != nil {
-                log.Println(err)
-        }
+	if err != nil {
+		log.Println(err)
+	}
 	if act == "-1" {
 		err := notifyNotApproved(review)
-                if err != nil {
-                        log.Println(err)
-                }
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
 	count := countPendingReviewer(reviewId)
@@ -198,7 +197,7 @@ func ReviewActionHandler(w http.ResponseWriter, req *http.Request, _ httprouter.
 				log.Println(err)
 			}
 			// set review to done
-	                updateReview(reviewId, 2)
+			updateReview(reviewId, 2)
 		}
 	}
 

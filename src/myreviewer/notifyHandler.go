@@ -1,13 +1,13 @@
 package myreviewer
 
-import(
-	"strings"
-	"strconv"
-	"net/http"
+import (
 	"bytes"
-	"log"
 	"encoding/json"
 	"io/ioutil"
+	"log"
+	"net/http"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -34,16 +34,23 @@ func notifyReview(review *Review, host string) error {
 	text := "Review in dong kak " + strings.Join(reviewerUsername, " ")
 	snippet := "Pull Request : " + review.PullRequest + "\nReviewer:\n"
 	for k, v := range reviewerName {
-		snippet = snippet + strconv.Itoa(k+1) + ". " + v + " " +generateApproveUrl(review, host, reviewerId[k]) + "/" + generateNotApproveUrl(review, host, reviewerId[k]) + "\n"
+		snippet = snippet + strconv.Itoa(k+1) + ". " + v + " " + generateApproveUrl(review, host, reviewerId[k]) + "/" + generateNotApproveUrl(review, host, reviewerId[k]) + "\n"
 	}
 
-	err = postToSlack(text, snippet, team.Channel, team.Webhook)
+	for {
+		err = postToSlack(text, snippet, team.Channel, team.Webhook)
+		if err == nil {
+			break
+		}
+		log.Println(err)
+	}
+
 	return err
 }
 
 func postToSlack(text, snippet, channel, webhook string) error {
 	payload := map[string]interface{}{
-		"text": text,
+		"text":       text,
 		"link_names": 1,
 		"attachments": []map[string]interface{}{
 			map[string]interface{}{
@@ -53,7 +60,7 @@ func postToSlack(text, snippet, channel, webhook string) error {
 	}
 
 	payload["channel"] = channel
-	
+
 	b, err := json.Marshal(payload)
 	if err != nil {
 		log.Println("[panics] marshal err", err)
@@ -85,11 +92,11 @@ func postToSlack(text, snippet, channel, webhook string) error {
 }
 
 func generateApproveUrl(review *Review, host, reviewerId string) string {
-	return "<http://" + host + "/myreviewer/review/action?reviewer_id="+reviewerId+"&act=2&id=" + review.ReviewId+ "|Approved>"
+	return "<http://" + host + "/myreviewer/review/action?reviewer_id=" + reviewerId + "&act=2&id=" + review.ReviewId + "|Approved>"
 }
 
 func generateNotApproveUrl(review *Review, host, reviewerId string) string {
-	return "<http://" + host + "/myreviewer/review/action?reviewer_id="+reviewerId+"&act=-1&id=" + review.ReviewId+ "|Not Approved>"
+	return "<http://" + host + "/myreviewer/review/action?reviewer_id=" + reviewerId + "&act=-1&id=" + review.ReviewId + "|Not Approved>"
 }
 
 func reNotifyReview(review *Review, host string) error {
@@ -117,7 +124,7 @@ func reNotifyReview(review *Review, host string) error {
 	text := "Review in dong kak " + strings.Join(reviewerUsername, " ")
 	snippet := "Pull Request : " + review.PullRequest + "\nReviewer:\n"
 	for k, v := range reviewerName {
-		snippet = snippet + strconv.Itoa(k+1) + ". " + v + " " +generateApproveUrl(review, host, reviewerIds[k]) + "/" + generateNotApproveUrl(review, host, reviewerIds[k]) + "\n"
+		snippet = snippet + strconv.Itoa(k+1) + ". " + v + " " + generateApproveUrl(review, host, reviewerIds[k]) + "/" + generateNotApproveUrl(review, host, reviewerIds[k]) + "\n"
 	}
 
 	err = postToSlack(text, snippet, team.Channel, team.Webhook)
@@ -141,7 +148,14 @@ func notifyApproved(review *Review) error {
 	text := "udah siap deploy nih kak " + qa.Username + " " + developer.Username
 	snippet := "Pull Request : " + review.PullRequest
 
-	err = postToSlack(text, snippet, team.Channel, team.Webhook)
+	for {
+		err = postToSlack(text, snippet, team.Channel, team.Webhook)
+		if err == nil {
+			break
+		}
+		log.Println(err)
+	}
+
 	return err
 }
 
@@ -162,6 +176,13 @@ func notifyNotApproved(review *Review) error {
 	text := "perlu ada yg di ubah nih kak " + qa.Username + " " + developer.Username
 	snippet := "Pull Request : " + review.PullRequest
 
-	err = postToSlack(text, snippet, team.Channel, team.Webhook)
+	for {
+		err = postToSlack(text, snippet, team.Channel, team.Webhook)
+		if err == nil {
+			break
+		}
+		log.Println(err)
+	}
+
 	return err
 }
