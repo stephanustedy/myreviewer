@@ -1,54 +1,147 @@
 {{ .header }}
 {{ .navigation }}
-<table>
-	<form method="post" id="form_addteam" action="/myreviewer/add">
-		<tr>
-			<td colspan="2">
-				Add Team
-			</td>
-		</tr>
-		<tr>
-			<td>
-				Name
-			</td>
-			<td>
-				<input type="text" name="team_addteam" id="team_addteam" />
-			</td>
-		</tr>
-		<tr>
-			<td>
-				Slack Channel
-			</td>
-			<td>
-				<input type="text" name="slack_channel_addteam" id="team_addteam" /> (ex : #tribe-discovery-tec)
-			</td>
-		</tr>
-		<tr>
-			<td>
-				Slack Webhook
-			</td>
-			<td>
-				<input type="text" name="slack_webhook_addteam" id="team_addteam" />
-			</td>
-		</tr>
-		<tr>
-			<td colspan="2">
-				<button id="submit_addteam">Submit</button>
-			</td>
-		</tr>
-	</form>
-</table>
-=========================================================
-<table>
+<table width="100%">
 	<tr>
 		<td>
-			Choose Team
+		{{ if .message  }}
+			<br/>{{ .message }}<br/><br/>
+		{{ end }}
 		</td>
-		<td>
-			<select>
-				<option></option>
-			</select>
+	</tr>
+	<tr>
+		<td valign="top" align="left" width="50%">
+		<table>
+			<form method="post" id="form_addteam" action="/myreviewer/add_team">
+				<tr>
+					<td colspan="2">Add Team</td>
+				</tr>
+				<tr>
+					<td colspan="2">========</td>
+				</tr>
+				<tr>
+					<td>Name</td>
+					<td>
+						<input type="text" name="name" />
+					</td>
+				</tr>
+				<tr>
+					<td>Slack Channel</td>
+					<td>
+						<input type="text" name="channel" /> (example : #tribe-discovery-tec)
+					</td>
+				</tr>
+				<tr>
+					<td>Slack Webhook</td>
+					<td>
+						<input type="text" name="webhook" />
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						<button id="submit_addteam">Submit</button>
+					</td>
+				</tr>
+			</form>
+		</table><br/>
+		=========================================================<br/>
+		Team List<br/>
+		=======<br/>
+		<table border="1px" id="team-list">
+			<tr>
+				<td>Name</td>
+				<td>Slack Channel</td>
+				<td>Action</td>
+			</tr>
+			{{ range $value := .team }}
+			<tr>
+				<td>{{ $value.Name }}</td>
+				<td>{{ $value.Channel }}</td>
+				<td>
+					<form method="post" action="/myreviewer/delete_team" id="form-delete-team-{{ $value.TeamId }}">
+					<input type="hidden" name="team_id" value="{{ $value.TeamId }}" />
+					</form>
+					<!--<a href="/myreviewer/update_team/{{ $value.TeamId }}">Update</a>-->
+					<a href="" class="delete-team" data-team-id="{{ $value.TeamId }}">Delete</a>
+				</td>
+			</tr>
+			{{ end }}
+		</table>
+		{{ .footer }}
+		</td>
+		<td valign="top" align="left" width="50%">
+			Add Member<br/>
+			==========
+			<table>
+				<form method="post" id="form_addmember" action="/myreviewer/add_member">
+					<tr>
+						<td>Team</td>
+						<td>
+							<select name="team">
+								{{ range $value := .team }}
+									<option value="{{$value.TeamId}}">{{$value.Name}}</option>
+								{{ end }}
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td>Role</td>
+						<td>
+							<select name="role">
+								<option value="1">SE</option>
+								<option value="2">QA</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td>Name</td>
+						<td>
+							<input type="text" name="name" />
+						</td>
+					</tr>
+					<tr>
+						<td>Slack Username</td>
+						<td>
+							<input type="text" name="username" /> (example : @stephanus.tedy)
+						</td>
+					</tr>
+					<tr>
+					<td colspan="2">
+						<button id="submit_addmember">Submit</button>
+					</td>
+				</tr>
+				</form>
+			</table>
+			=========================================================<br/>
+			Member List<br/>
+			===========<br/>
+			<table border="1px" id="member-list">
+			<tr>
+				<td>Team Name</td>
+				<td>Member Name</td>
+				<td>Role</td>
+				<td>Username</td>
+				<td>Action</td>
+			</tr>
+			{{ range $value := .team }}
+				{{ range $idx, $member := $value.Member }}
+				<tr>
+					{{ if eq $idx 0}}
+					<td rowspan="{{ len $value.Member }}">{{$value.Name}}</td>
+					{{ end }}
+					<td>{{$member.Name}}</td>
+					<td>{{$member.Username}}</td>
+					<td>{{$member.Role}}</td>
+					<td>
+						<form method="post" action="/myreviewer/delete_member" id="form-delete-member-{{ $member.MemberId }}">
+						<input type="hidden" name="member_id" value="{{ $member.MemberId }}" />
+						</form>
+						<!--<a href="/myreviewer/update_team/{{ $value.TeamId }}">Update</a>-->
+						<a href="" class="delete-member" data-member-id="{{ $member.MemberId }}">Delete</a>
+					</td>
+				</tr>
+				{{ end }}
+			{{ end }}
+			</table>
 		</td>
 	</tr>
 </table>
-{{ .footer }}

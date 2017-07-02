@@ -1,11 +1,99 @@
 {{ .header }}
 {{ .navigation }}
+{{ .message }}
 <table>
 	<tr>
 		<td>
-			<select>
-				<option></option>
-			</select>
+			Review<br/>
+			======
+			<script>
+				var team = new Object;
+				{{ range $value := .team }}
+					var tempTeam = new Object();
+
+					tempTeam.Name = {{$value.Name}};
+					tempTeam.TeamId = {{ $value.TeamId}};
+					tempTeam.Member = new Array();
+
+					{{ range $member := $value.Member }}
+						var tempMember = new Object();
+
+						tempMember.MemberId = {{ $member.MemberId }};
+						tempMember.Name = {{ $member.Name }};
+						tempMember.Role = {{ $member.Role }};
+						tempTeam.Member.push(tempMember);
+					{{ end }}
+
+					team[tempTeam.TeamId] = tempTeam;
+				{{end}}
+			</script>
+			<form action="/myreviewer/review" method="post" id="review-form">
+				<table>
+					<tr>
+						<td>Team</td>
+						<td>
+							<select name="team" id="team">
+								{{ range $value := .team }}
+									<option value="{{$value.TeamId}}">{{$value.Name}}</option>
+								{{ end }}
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td>QA</td>
+						<td>
+							<select name="qa" id="qa"></select>
+						</td>
+					</tr>
+					<tr>
+						<td>Developer</td>
+						<td>
+							<select name="se" id="se"></select>
+						</td>
+					</tr>
+					<tr>
+						<td>Pull Request</td>
+						<td>
+							<input type="text" name="pr" id="pr" />
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<button id="submit-review">Submit</button>
+						</td>
+					</tr>
+				</table>
+			</form>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			===================================================<br/>
+			Review Status<br/>
+			===========
+			<table border="1px" id="review-list">
+				<tr>
+					<td>Team</td>
+					<td>Pull Request</td>
+					<td>Status</td>
+					<td>Action</td>
+				</tr>
+				{{ range $value := .review }}
+					<tr>
+						<td>{{ $value.TeamName }}</td>
+						<td>{{ $value.PullRequest }}</td>
+						<td>
+							{{ range $reviewer := $value.Reviewer }}
+									{{ $reviewer.ReviewerName }} ( {{ $reviewer.StatusStr }} ) <br/>
+							{{ end }}
+						</td>
+						<td>
+							<a href="/myreviewer/review/renotify?id={{$value.ReviewId}}">Re Notify</a>
+							<a href="/myreviewer/review/close?id={{$value.ReviewId}}">Close</a>
+						</td>
+					</tr>
+				{{ end }}
+			</table>
 		</td>
 	</tr>
 </table>

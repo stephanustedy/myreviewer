@@ -3,3 +3,6 @@
 	{{ range $value := .scripts }}
 		<script src="{{$value}}"></script>
 	{{ end }}
+	{{ range $value := .css }}
+		<link rel="stylesheet" href="{{$value}}">
+	{{ end }}

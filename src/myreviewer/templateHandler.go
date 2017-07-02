@@ -5,10 +5,17 @@ import(
 	"html/template"
 )
 
-func homeTemplateHandler() bytes.Buffer {
+func reviewTemplateHandler(message string, team []*Team, reviews []*Review) bytes.Buffer {
 	var content bytes.Buffer
 
-	args := getDefaultTemplate([]string{}, []string{})
+	reviewScripts := []string{}
+	reviewScripts = append(reviewScripts, "/assets/scripts/review.js")
+
+	args := getDefaultTemplate(reviewScripts, []string{})
+
+	args["message"] = message
+	args["team"] = team
+	args["review"] = reviews
 
 	templates.ExecuteTemplate(&content, "review.html", args)
 
@@ -16,13 +23,16 @@ func homeTemplateHandler() bytes.Buffer {
 }
 
 
-func manageTemplateHandler() bytes.Buffer {
+func manageTemplateHandler(message string, team []*Team) bytes.Buffer {
 	var content bytes.Buffer
 
 	manageScripts := []string{}
 	manageScripts = append(manageScripts, "/assets/scripts/manage.js")
 
 	args := getDefaultTemplate(manageScripts, []string{})
+
+	args["message"] = message
+	args["team"] = team
 
 	templates.ExecuteTemplate(&content, "manage.html", args)
 
@@ -39,6 +49,10 @@ func getDefaultTemplate(additionalScripts []string, additionalCss []string) map[
 
 	scripts := []string{}
 	css := []string{}
+
+	//append global js. global css first.
+	css = append(css, "/assets/css/global.css")
+	
 
 	//append global js. global js first.
 	scripts = append(scripts, "/assets/scripts/jquery-3.2.1.min.js")
@@ -64,4 +78,12 @@ func getDefaultTemplate(additionalScripts []string, additionalCss []string) map[
 	args["navigation"] = template.HTML(navigation.String())
 
 	return args
+}
+
+func closeTemplateHandler() bytes.Buffer {
+	var content bytes.Buffer
+
+	templates.ExecuteTemplate(&content, "close_window.html", nil)
+
+	return content
 }
