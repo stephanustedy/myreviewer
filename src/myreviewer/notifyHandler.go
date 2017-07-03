@@ -60,6 +60,8 @@ func postToSlack(text, snippet, channel, webhook string) error {
 	}
 
 	payload["channel"] = channel
+	payload["username"] = "review-bot"
+	payload["icon_emoji"] = ":smiling_imp:"
 
 	b, err := json.Marshal(payload)
 	if err != nil {
