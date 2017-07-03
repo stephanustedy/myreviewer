@@ -401,6 +401,7 @@ func getPendingReviewerByReviewId(reviewId string) ([]*Reviewer, error) {
 				, reviewer.status
 				, member.Name
 				, member.Username
+				, reviewer.reviewer_id
 			FROM
 				reviewer
 				JOIN member on reviewer.reviewer_id = member.member_id
@@ -415,7 +416,7 @@ func getPendingReviewerByReviewId(reviewId string) ([]*Reviewer, error) {
 	for rows.Next() {
 		reviewer := &Reviewer{}
 		var reviewStatus int
-		err := rows.Scan(&reviewer.Id, &reviewStatus, &reviewer.ReviewerName, &reviewer.ReviewerUsername)
+		err := rows.Scan(&reviewer.Id, &reviewStatus, &reviewer.ReviewerName, &reviewer.ReviewerUsername, &reviewer.ReviewerId)
 		if err != nil {
 			log.Println(err)
 			return reviewers, err

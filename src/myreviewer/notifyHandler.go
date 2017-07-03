@@ -127,7 +127,15 @@ func reNotifyReview(review *Review, host string) error {
 		snippet = snippet + strconv.Itoa(k+1) + ". " + v + " " + generateApproveUrl(review, host, reviewerIds[k]) + "/" + generateNotApproveUrl(review, host, reviewerIds[k]) + "\n"
 	}
 
-	err = postToSlack(text, snippet, team.Channel, team.Webhook)
+
+	for {
+		err = postToSlack(text, snippet, team.Channel, team.Webhook)
+		if err == nil {
+			break
+		}
+		log.Println(err)
+	}
+	
 	return err
 }
 
