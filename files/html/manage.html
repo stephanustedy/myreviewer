@@ -129,8 +129,8 @@
 					<td rowspan="{{ len $value.Member }}">{{$value.Name}}</td>
 					{{ end }}
 					<td>{{$member.Name}}</td>
-					<td>{{$member.Username}}</td>
 					<td>{{$member.Role}}</td>
+					<td>{{$member.Username}}</td>
 					<td>
 						<form method="post" action="/myreviewer/delete_member" id="form-delete-member-{{ $member.MemberId }}">
 						<input type="hidden" name="member_id" value="{{ $member.MemberId }}" />

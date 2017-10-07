@@ -1,9 +1,10 @@
 package myreviewer
 
-import(
+import (
 	"log"
-	"time"
 	"strconv"
+	"strings"
+	"time"
 )
 
 func getTeamList() ([]*Team, error) {
@@ -163,7 +164,7 @@ func getSEMemberList(teamId, excludeId string) ([]*Member, error) {
 			WHERE
 				status = 1
 				AND role = 1
-				AND member_id != `+excludeId+`
+				AND member_id != ` + excludeId + `
 				AND team_id = ` + teamId)
 	if err != nil {
 		log.Println(err)
@@ -189,102 +190,138 @@ func getSEMemberList(teamId, excludeId string) ([]*Member, error) {
 	return members, nil
 }
 
+func getAvailableSEMemberList(teamId, excludeId string) ([]*Member, error) {
+	members := []*Member{}
+	rows, err := db.Query(`
+			SELECT
+				member_id
+				, name
+				, username
+				, role
+			FROM
+				member
+			WHERE
+				status = 1
+				AND role = 1
+				AND member_id != ` + excludeId + `
+				AND team_id = ` + teamId + `
+				AND available_after < CURRENT_TIMESTAMP`)
+	if err != nil {
+		log.Println(err)
+		return members, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		member := &Member{}
+		var role int
+		err := rows.Scan(&member.MemberId, &member.Name, &member.Username, &role)
+		if err != nil {
+			log.Println(err)
+			return members, err
+		}
+		member.Role = "SE"
+		members = append(members, member)
+	}
+
+	return members, nil
+}
+
 func deleteTeam(teamId string) error {
 	stmt, err := db.Prepare("UPDATE team SET status = 0 where team_id = ?")
-    if err != nil {
-    	return err
-    }
+	if err != nil {
+		return err
+	}
 
-    _, err = stmt.Exec(teamId)
-    if err != nil {
-    	return err
-    }
+	_, err = stmt.Exec(teamId)
+	if err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
 
 func deleteMember(memberId string) error {
 	stmt, err := db.Prepare("UPDATE member SET status = 0 where member_id = ?")
-    if err != nil {
-    	return err
-    }
+	if err != nil {
+		return err
+	}
 
-    _, err = stmt.Exec(memberId)
-    if err != nil {
-    	return err
-    }
+	_, err = stmt.Exec(memberId)
+	if err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
 
 func addMember(member *Member) error {
 	stmt, err := db.Prepare("INSERT INTO member(team_id, role, name, username, status) values(?,?,?,?,?)")
-    if err != nil {
-    	return err
-    }
+	if err != nil {
+		return err
+	}
 
-    _, err = stmt.Exec(member.TeamId, member.Role, member.Name, member.Username, 1)
-    if err != nil {
-    	return err
-    }
+	_, err = stmt.Exec(member.TeamId, member.Role, member.Name, member.Username, 1)
+	if err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
 
 func addTeam(team *Team) error {
 	stmt, err := db.Prepare("INSERT INTO team(name, status, webhook, channel) values(?,?,?,?)")
-    if err != nil {
-    	return err
-    }
+	if err != nil {
+		return err
+	}
 
-    _, err = stmt.Exec(team.Name, 1, team.Webhook, team.Channel)
-    if err != nil {
-    	return err
-    }
+	_, err = stmt.Exec(team.Name, 1, team.Webhook, team.Channel)
+	if err != nil {
+		return err
+	}
 
-    return nil
-}
-
-func updateTeam() {
-
-}
-
-func updateMember() {
-
+	return nil
 }
 
 func addReview(review *Review) (*Review, error) {
 	stmt, err := db.Prepare("INSERT INTO review(team_id, qa, developer, pull_request, status) values(?,?,?,?,?)")
-    if err != nil {
-    	return nil, err
-    }
+	if err != nil {
+		return nil, err
+	}
 
-    res, err := stmt.Exec(review.TeamId, review.QA, review.Developer, review.PullRequest, 1)
-    if err != nil {
-    	return nil, err
-    }
+	res, err := stmt.Exec(review.TeamId, review.QA, review.Developer, review.PullRequest, 1)
+	if err != nil {
+		return nil, err
+	}
 
-    id, err := res.LastInsertId()
-    if err != nil {
-    	return nil, err
-    }
+	id, err := res.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
 
-    review.ReviewId = strconv.FormatInt(id, 10)
+	review.ReviewId = strconv.FormatInt(id, 10)
 
-    reviewer, err := addReviewer(review)
-    if err != nil {
-    	return nil, err
-    }
+	reviewer, err := addReviewer(review, "")
+	if err != nil {
+		return nil, err
+	}
 
-    review.Reviewer = reviewer
+	review.Reviewer = reviewer
 
 	return review, nil
 }
 
-func addReviewer(review *Review) ([]*Reviewer, error) {
+func addReviewer(review *Review, selectedReviewerId string) ([]*Reviewer, error) {
 	reviewers := []*Reviewer{}
-	team, err  := getTeamById(review.TeamId)
+	team, err := getTeamById(review.TeamId)
 	reviewer := randomMember(team, review.Developer)
+
+	if selectedReviewerId != "" {
+		member, err := getMemberById(selectedReviewerId)
+		if err != nil {
+			log.Println(err)
+		}
+		reviewer = []*Member{member}
+	}
 
 	for _, v := range reviewer {
 		if err != nil {
@@ -293,28 +330,28 @@ func addReviewer(review *Review) ([]*Reviewer, error) {
 		}
 
 		stmt, err := db.Prepare("INSERT INTO reviewer(review_id, reviewer_id, status, last_notify, notify_count) values(?,?,?,?,?)")
-	    if err != nil {
-	    	return reviewers, err
-	    }
+		if err != nil {
+			return reviewers, err
+		}
 
-	    res, err := stmt.Exec(review.ReviewId, v.MemberId, 1, "now()", 1)
-	    if err != nil {
-	    	return reviewers, err
-	    }
+		res, err := stmt.Exec(review.ReviewId, v.MemberId, 1, "CURRENT_TIMESTAMP", 1)
+		if err != nil {
+			return reviewers, err
+		}
 
-	    id, err := res.LastInsertId()
-	    if err != nil {
-	    	return reviewers, err
-	    }
+		id, err := res.LastInsertId()
+		if err != nil {
+			return reviewers, err
+		}
 
-	    temp := &Reviewer{}
-	    temp.Id = strconv.FormatInt(id, 10)
-	    temp.ReviewerId = v.MemberId
-	    temp.LastNotify = time.Now()
-	    temp.NotifyCount = 1
-	    temp.Status = 1
+		temp := &Reviewer{}
+		temp.Id = strconv.FormatInt(id, 10)
+		temp.ReviewerId = v.MemberId
+		temp.LastNotify = time.Now()
+		temp.NotifyCount = 1
+		temp.Status = 1
 
-	    reviewers = append(reviewers, temp)
+		reviewers = append(reviewers, temp)
 	}
 
 	return reviewers, nil
@@ -362,6 +399,7 @@ func getReviewerByReviewId(reviewId string) ([]*Reviewer, error) {
 				id
 				, reviewer.status
 				, member.Name
+				, reviewer_id
 			FROM
 				reviewer
 				JOIN member on reviewer.reviewer_id = member.member_id
@@ -374,7 +412,7 @@ func getReviewerByReviewId(reviewId string) ([]*Reviewer, error) {
 	defer rows.Close()
 	for rows.Next() {
 		reviewer := &Reviewer{}
-		err := rows.Scan(&reviewer.Id, &reviewer.Status, &reviewer.ReviewerName)
+		err := rows.Scan(&reviewer.Id, &reviewer.Status, &reviewer.ReviewerName, &reviewer.ReviewerId)
 		if err != nil {
 			log.Println(err)
 			return reviewers, err
@@ -386,6 +424,8 @@ func getReviewerByReviewId(reviewId string) ([]*Reviewer, error) {
 			reviewer.StatusStr = "Approved"
 		} else if reviewer.Status == -1 {
 			reviewer.StatusStr = "Not Approved"
+		} else if reviewer.Status == -2 {
+			reviewer.StatusStr = "Busy"
 		}
 		reviewers = append(reviewers, reviewer)
 	}
@@ -460,36 +500,40 @@ func getReviewById(reviewId string) (*Review, error) {
 			return review, err
 		}
 	}
+	review.Reviewer, err = getReviewerByReviewId(reviewId)
+	if err != nil {
+		log.Println(err)
+	}
 
 	return review, nil
 }
 
 func updateReview(reviewId string, status int) error {
 	stmt, err := db.Prepare("UPDATE review SET status = ? where review_id = ?")
-    if err != nil {
-    	return err
-    }
+	if err != nil {
+		return err
+	}
 
-    _, err = stmt.Exec(status, reviewId)
-    if err != nil {
-    	return err
-    }
+	_, err = stmt.Exec(status, reviewId)
+	if err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
 
 func updateReviewer(reviewId, status, reviewerId string) error {
 	stmt, err := db.Prepare("UPDATE reviewer SET status = ? where review_id = ? AND reviewer_id = ?")
-    if err != nil {
-    	return err
-    }
+	if err != nil {
+		return err
+	}
 
-    _, err = stmt.Exec(status, reviewId, reviewerId)
-    if err != nil {
-    	return err
-    }
+	_, err = stmt.Exec(status, reviewId, reviewerId)
+	if err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
 
 func countPendingReviewer(reviewId string) int {
@@ -525,4 +569,62 @@ func getNotApproveCount(reviewId string) bool {
 		return false
 	}
 	return true
+}
+
+func findOtherReviewer(review *Review, busyReviewer string) (string, error) {
+	var reviewerId string
+	oldReviewer := []string{}
+	for _, v := range review.Reviewer {
+		oldReviewer = append(oldReviewer, v.ReviewerId)
+	}
+
+	oldReviewer = append(oldReviewer, review.Developer)
+	rows, err := db.Query(`
+			SELECT
+				member_id
+			FROM
+				member
+			WHERE
+				status = 1
+				AND role = 1
+				AND member_id not in(` + strings.Join(oldReviewer, ",") + `)
+				AND available_after < CURRENT_TIMESTAMP
+			ORDER 
+				BY RANDOM()
+			LIMIT 
+				1`)
+	if err != nil {
+		log.Println(err)
+		return reviewerId, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&reviewerId)
+		if err != nil {
+			log.Println(err)
+			return reviewerId, err
+		}
+	}
+
+	if reviewerId != "" {
+		addReviewer(review, reviewerId)
+	}
+
+	return reviewerId, nil
+}
+
+func setUnavailable(memberId string) error {
+	stmt, err := db.Prepare("UPDATE member SET available_after = DATETIME(available_after, '+6 hours') where member_id = ?")
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	_, err = stmt.Exec(memberId)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return nil
 }

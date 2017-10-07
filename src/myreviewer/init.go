@@ -1,9 +1,10 @@
 package myreviewer
 
 import (
+	"database/sql"
 	"log"
 	"os"
-	"database/sql"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -39,7 +40,7 @@ func Initialize() {
  			, webhook varchar(500) not null
  			, status int not null
  			, channel varchar(255) not null)`)
- 
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -53,8 +54,9 @@ func Initialize() {
  			, username varchar(255) NOT null
  			, role int not null
  			, status int not null
- 			, team_id int not null)`)
- 
+			, team_id int not null
+			, available_after timestamp DEFAULT CURRENT_TIMESTAMP)`)
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -69,7 +71,7 @@ func Initialize() {
  			, developer int NOT null
  			, pull_request varchar(255) not null
  			, status int not null)`)
- 
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -84,11 +86,10 @@ func Initialize() {
  			, status int not null
  			, last_notify timestamp
  			, notify_count int not null)`)
- 
+
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	InitializeCron()
 }
-

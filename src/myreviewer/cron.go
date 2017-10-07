@@ -1,15 +1,16 @@
 package myreviewer
 
-import(
+import (
 	"log"
 	"time"
+
 	"github.com/robfig/cron"
 )
 
 func InitializeCron() {
 	log.Println("cron initialized")
 	c := cron.New()
-	c.AddFunc("@every 30m", func() {reNotifyAllPending()})
+	c.AddFunc("@every 30m", func() { reNotifyAllPending() })
 	c.Start()
 }
 
@@ -27,7 +28,7 @@ func reNotifyAllPending() {
 			for _, review := range allActiveReview {
 				for _, reviewer := range review.Reviewer {
 					if reviewer.Status == 1 {
-						err := reNotifyReview(review, "devel-go.tkpd:7412")
+						err := notifyReview(review, "devel-go.tkpd:7412", "")
 						if err != nil {
 							log.Println(err)
 						}
@@ -35,6 +36,6 @@ func reNotifyAllPending() {
 					}
 				}
 			}
-		} 
+		}
 	}
 }

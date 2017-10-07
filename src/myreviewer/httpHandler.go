@@ -128,7 +128,7 @@ func ReviewHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params
 		message = "failed notify review!"
 	}
 
-	err = notifyReview(review, host)
+	err = notifyReview(review, host, "")
 	if err != nil {
 		log.Println("failed notify review", err)
 		message = "failed notify review!"
@@ -146,7 +146,7 @@ func ReNotifyHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Para
 		log.Println(err)
 	}
 	message := "success renotify review!"
-	err = reNotifyReview(review, host)
+	err = notifyReview(review, host, "")
 	if err != nil {
 		log.Println("failed notify review", err)
 		message = "failed notify review!"
@@ -177,14 +177,30 @@ func ReviewActionHandler(w http.ResponseWriter, req *http.Request, _ httprouter.
 	if err != nil {
 		log.Println(err)
 	}
+
 	review, err := getReviewById(reviewId)
 	if err != nil {
 		log.Println(err)
 	}
-	if act == "-1" {
+	if act == REVIEWER_STATUS_NOT_APPROVE {
 		err := notifyNotApproved(review)
 		if err != nil {
 			log.Println(err)
+		}
+	}
+	if act == REVIEWER_STATUS_BUSY {
+		setUnavailable(reviewerId)
+		newReviewer, err := findOtherReviewer(review, reviewerId)
+		if err != nil {
+			log.Println(err)
+		}
+
+		if newReviewer != "" {
+			review, err := getReviewById(reviewId)
+			if err != nil {
+				log.Println(err)
+			}
+			notifyReview(review, req.Host, newReviewer)
 		}
 	}
 
