@@ -589,6 +589,7 @@ func findOtherReviewer(review *Review, busyReviewer string) (string, error) {
 				AND role = 1
 				AND member_id not in(` + strings.Join(oldReviewer, ",") + `)
 				AND available_after < CURRENT_TIMESTAMP
+				AND team_id =` + review.TeamId + `
 			ORDER 
 				BY RANDOM()
 			LIMIT 
